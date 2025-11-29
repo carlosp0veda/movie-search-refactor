@@ -4,9 +4,11 @@ This document details the security fixes, architecture refactoring, and code qua
 
 ---
 
+# Backend Changes
+
 ## Clean Architecture Refactoring
 
-Based on Hexagonal Architecture / Clean Architecture principles, the backend has been restructured into four distinct layers.
+Based on a hexagonal architecture, the backend has been restructured into four distinct layers: domain, application, infrastructure, and bootstrap.
 
 ### New Project Structure
 
@@ -16,7 +18,6 @@ backend/src/
 │   └── rest-api-adapter/
 │       ├── controller/
 │       │   ├── movie.controller.ts
-│       │   └── health.controller.ts
 │       └── dto/
 │           └── movie.dto.ts
 ├── common/                         # Shared utilities
@@ -148,8 +149,8 @@ Custom exceptions created:
 ### 2. Global Exception Filter
 
 Consistent error responses across all endpoints:
-
 ```typescript
+
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -204,9 +205,9 @@ app.use(helmet());  // Security headers
 
 ---
 
-## Critical Security Fixes (P0)
+## Backend Security Fixes
 
-### 1. Removed Hardcoded API Key
+### 1. Removed Hardcoded API Key (P0 - Critical)
 
 **File:** `backend/src/movies/movies.service.ts`
 
@@ -229,7 +230,7 @@ this.baseUrl = 'http://www.omdbapi.com/';
 
 ---
 
-### 2. Fixed HttpExceptions (Throw Instead of Return)
+### 2. Fixed HttpExceptions (Throw Instead of Return) (P0 - Critical)
 
 **File:** `backend/src/movies/movies.service.ts`
 
@@ -251,7 +252,7 @@ if (foundMovie) {
 
 ---
 
-### 3. Added Input Validation with class-validator
+### 3. Added Input Validation with class-validator (P0 - Critical)
 
 **File:** `backend/src/movies/dto/movie.dto.ts`
 
@@ -296,7 +297,7 @@ export class MovieDto {
 
 ---
 
-### 4. Added URL Parameter Encoding
+### 4. Added URL Parameter Encoding (P0 - Critical)
 
 **File:** `backend/src/movies/movies.service.ts`
 
@@ -318,21 +319,11 @@ const response = await axios.get<OmdbSearchResponse>(this.baseUrl, {
 });
 ```
 
-**File:** `frontend/src/lib/api.ts`
-
-**After:**
-```typescript
-const encodedQuery = encodeURIComponent(query.trim());
-const url = `${API_BASE_URL}/search?q=${encodedQuery}&page=${page}`;
-```
-
 **Impact:** Prevents URL injection attacks and properly handles special characters in search queries.
 
 ---
 
-## High Priority Fixes (P1)
-
-### 5. Added Global ValidationPipe
+### 5. Added Global ValidationPipe (P1 - High)
 
 **File:** `backend/src/main.ts`
 
@@ -353,7 +344,7 @@ app.useGlobalPipes(
 
 ---
 
-### 6. CORS Configuration from Environment Variables
+### 6. CORS Configuration from Environment Variables (P1 - High)
 
 **File:** `backend/src/main.ts`
 
@@ -380,7 +371,7 @@ app.enableCors({
 
 ---
 
-### 7. Added Rate Limiting
+### 7. Added Rate Limiting (P1 - High)
 
 **File:** `backend/src/app.module.ts`
 
@@ -406,7 +397,7 @@ import { APP_GUARD } from '@nestjs/core';
 
 ---
 
-### 8. Added Helmet Security Headers
+### 8. Added Helmet Security Headers (P1 - High)
 
 **File:** `backend/src/main.ts`
 
@@ -420,7 +411,7 @@ app.use(helmet());
 
 ---
 
-### 9. Comprehensive Error Handling
+### 9. Comprehensive Error Handling (P1 - High)
 
 **File:** `backend/src/movies/movies.service.ts`
 
@@ -448,9 +439,9 @@ try {
 
 ---
 
-## Code Quality Improvements (P2)
+## Backend Code Quality Improvements
 
-### 10. Added Logging
+### 1. Added Logging (P2)
 
 **File:** `backend/src/movies/movies.service.ts`
 
@@ -466,7 +457,60 @@ this.logger.debug(`No results for query "${title}": ${response.data.Error}`);
 
 ---
 
-### 11. Fixed Frontend API Error Handling
+## Backend Dependencies
+
+```json
+{
+  "class-validator": "^latest",
+  "class-transformer": "^latest",
+  "@nestjs/throttler": "^latest",
+  "helmet": "^latest"
+}
+```
+
+---
+
+## Backend Environment Variables
+
+```bash
+# .env file in /backend
+OMDB_API_KEY=your_api_key_here  # Required - get from https://www.omdbapi.com/apikey.aspx
+PORT=3001                        # Optional, default: 3001
+CORS_ORIGINS=http://localhost:3000  # Optional, comma-separated list
+```
+
+---
+
+## Backend Files Modified
+
+- `src/main.ts` - Security middleware, validation, CORS
+- `src/app.module.ts` - Rate limiting configuration
+- `src/movies/movies.service.ts` - Complete rewrite with proper error handling
+- `src/movies/movies.controller.ts` - Input validation and type safety
+- `src/movies/dto/movie.dto.ts` - Validation decorators
+
+---
+
+# Frontend Changes
+
+## Frontend Security Fixes
+
+### 1. Added URL Parameter Encoding (P0 - Critical)
+
+**File:** `frontend/src/lib/api.ts`
+
+```typescript
+const encodedQuery = encodeURIComponent(query.trim());
+const url = `${API_BASE_URL}/search?q=${encodedQuery}&page=${page}`;
+```
+
+**Impact:** Prevents URL injection attacks and properly handles special characters in search queries.
+
+---
+
+## Frontend Code Quality Improvements
+
+### 1. Fixed API Error Handling (P2)
 
 **File:** `frontend/src/lib/api.ts`
 
@@ -494,9 +538,9 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 ---
 
-### 12. Added React Query Retry Logic
+### 2. Added React Query Retry Logic (P2)
 
-**File:** `frontend/src/hooks/useMovies.ts`
+**File:** `frontend/src/hooks/useSearchMovies.ts`
 
 ```typescript
 return useQuery<SearchMoviesResponse, ApiError>({
@@ -517,7 +561,7 @@ return useQuery<SearchMoviesResponse, ApiError>({
 
 ---
 
-### 13. Fixed QueryClient Re-creation Bug
+### 3. Fixed QueryClient Re-creation Bug (P2)
 
 **File:** `frontend/src/providers/QueryProvider.tsx`
 
@@ -535,7 +579,7 @@ const [queryClient] = useState(() => new QueryClient({ /* ... */ }));
 
 ---
 
-### 14. Added Memoization in Components
+### 4. Added Memoization in Components (P2)
 
 **File:** `frontend/src/app/page.tsx`
 
@@ -561,7 +605,7 @@ const handleToggleFavorite = useCallback(async (movie: Movie) => {
 
 ---
 
-### 15. Fixed Type Consistency
+### 5. Fixed Type Consistency (P2)
 
 **File:** `frontend/src/types/movie.ts`
 
@@ -584,72 +628,3 @@ export interface FavoritesResponse {
 ```
 
 **Impact:** Type safety between frontend and backend responses.
-
----
-
-## New Dependencies Added
-
-### Backend
-```json
-{
-  "class-validator": "^latest",
-  "class-transformer": "^latest",
-  "@nestjs/throttler": "^latest",
-  "helmet": "^latest"
-}
-```
-
----
-
-## Environment Variables
-
-### Backend (Required)
-```bash
-# .env file in /backend
-OMDB_API_KEY=your_api_key_here  # Required - get from https://www.omdbapi.com/apikey.aspx
-PORT=3001                        # Optional, default: 3001
-CORS_ORIGINS=http://localhost:3000  # Optional, comma-separated list
-```
-
-### Frontend (Optional)
-```bash
-# .env.local file in /frontend
-NEXT_PUBLIC_API_URL=http://localhost:3001/movies
-```
-
----
-
-## Files Modified
-
-### Backend
-- `src/main.ts` - Security middleware, validation, CORS
-- `src/app.module.ts` - Rate limiting configuration
-- `src/movies/movies.service.ts` - Complete rewrite with proper error handling
-- `src/movies/movies.controller.ts` - Input validation and type safety
-- `src/movies/dto/movie.dto.ts` - Validation decorators
-
-### Frontend
-- `src/lib/api.ts` - Error handling, URL encoding
-- `src/hooks/useMovies.ts` - Retry logic, proper typing
-- `src/app/page.tsx` - Memoization, error states
-- `src/app/favorites/page.tsx` - Error/loading states
-- `src/providers/QueryProvider.tsx` - Fixed QueryClient bug
-- `src/types/movie.ts` - Type consistency
-- `src/components/ui/input.tsx` - Lint fix
-
----
-
-## Security Checklist
-
-| Item | Status |
-|------|--------|
-| No hardcoded secrets | ✅ |
-| Input validation on all endpoints | ✅ |
-| URL parameter encoding | ✅ |
-| Rate limiting | ✅ |
-| Security headers (Helmet) | ✅ |
-| Proper error handling | ✅ |
-| CORS properly configured | ✅ |
-| TypeScript strict typing | ✅ |
-| Linting errors resolved | ✅ |
-

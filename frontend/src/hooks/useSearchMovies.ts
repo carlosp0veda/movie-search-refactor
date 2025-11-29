@@ -24,7 +24,7 @@ export const useSearchMovies = (query: string, page: number = 1, enabled: boolea
 
   // Prefetch next page - idempotent, won't refetch if already cached
   if (queryResult.data && enabled && query.length > 0) {
-    const totalResults = queryResult.data.data.totalResults;
+    const totalResults = parseInt(queryResult.data.data.totalResults, 10);
     const totalPages = Math.ceil(totalResults / RESULTS_PER_PAGE);
     const nextPage = page + 1;
 

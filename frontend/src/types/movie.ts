@@ -10,7 +10,7 @@ export interface SearchMoviesResponse {
   data: {
     movies: Movie[];
     count: number;
-    totalResults: number;
+    totalResults: string;
   };
 }
 
@@ -18,7 +18,7 @@ export interface FavoritesResponse {
   data: {
     favorites: Movie[];
     count: number;
-    totalResults: number;
+    totalResults: string;
     currentPage: number;
     totalPages: number;
   };

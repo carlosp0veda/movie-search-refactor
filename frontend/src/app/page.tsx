@@ -27,7 +27,7 @@ export default function SearchPage() {
   // Memoize total pages calculation
   const totalPages = useMemo(() => {
     if (!searchResults?.data.totalResults) return 0;
-    return Math.ceil(searchResults.data.totalResults / RESULTS_PER_PAGE);
+    return Math.ceil(parseInt(searchResults.data.totalResults, 10) / RESULTS_PER_PAGE);
   }, [searchResults?.data.totalResults]);
 
   const handleSearch = useCallback((query: string) => {
