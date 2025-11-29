@@ -3,7 +3,6 @@ import { ValidationPipe, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import helmet from "helmet";
 import { AppModule } from "./bootstrap/app.module";
-import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 
 async function bootstrap() {
   const logger = new Logger("Bootstrap");
@@ -15,8 +14,6 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   app.use(helmet());
-
-  app.useGlobalFilters(new GlobalExceptionFilter());
 
   app.useGlobalPipes(
     new ValidationPipe({

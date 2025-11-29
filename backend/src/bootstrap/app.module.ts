@@ -1,8 +1,9 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
-import { APP_GUARD } from "@nestjs/core";
+import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 import { RestApiModule } from "./rest-api.module";
+import { GlobalExceptionFilter } from "src/common/filters/http-exception.filter";
 
 /**
  * Root application module.
@@ -28,6 +29,10 @@ import { RestApiModule } from "./rest-api.module";
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
     },
   ],
 })
