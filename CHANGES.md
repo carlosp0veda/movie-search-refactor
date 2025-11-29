@@ -190,35 +190,13 @@ app.useGlobalPipes(
 );
 ```
 
-### 5. Health Check Endpoint
-
-```typescript
-@Controller("health")
-@SkipThrottle() // Don't rate limit health checks
-export class HealthController {
-  @Get()
-  check(): { status: string; timestamp: string } {
-    return { status: "ok", timestamp: new Date().toISOString() };
-  }
-}
-```
-
-### 6. API Versioning Support
-
-```typescript
-app.enableVersioning({
-  type: VersioningType.URI,
-  defaultVersion: "1",
-});
-```
-
-### 7. Graceful Shutdown
+### 5. Graceful Shutdown
 
 ```typescript
 app.enableShutdownHooks();
 ```
 
-### 8. Security Middleware
+### 6. Security Middleware
 
 ```typescript
 app.use(helmet());  // Security headers
