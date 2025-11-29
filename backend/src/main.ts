@@ -1,17 +1,72 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { NestFactory } from "@nestjs/core";
+import { ValidationPipe, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import helmet from "helmet";
+import { AppModule } from "./bootstrap/app.module";
+import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  // BUG: Hardcoded CORS origins, should use env vars
+  const logger = new Logger("Bootstrap");
+
+  const app = await NestFactory.create(AppModule, {
+    logger: ["error", "warn", "log", "debug"],
+  });
+
+  const configService = app.get(ConfigService);
+
+  app.use(helmet());
+
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+      exceptionFactory: (errors) => {
+        const messages = errors.map((error) => ({
+          field: error.property,
+          constraints: error.constraints,
+        }));
+        return {
+          statusCode: 400,
+          message: "Validation failed",
+          errors: messages,
+        };
+      },
+    }),
+  );
+
+  const corsOrigins = configService.get<string>("CORS_ORIGINS");
+
+  if (!corsOrigins) {
+    throw new Error("CORS_ORIGINS is not set");
+  }
+
+  const allowedOrigins = corsOrigins.split(",").map((origin) => origin.trim());
+
   app.enableCors({
-    origin: ['http://localhost:3000'],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: allowedOrigins,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   });
-  // BUG: No error handling
-  await app.listen(process.env.PORT || 3001);
-  console.log(`Application is running on: ${await app.getUrl()}`);
-}
-bootstrap();
 
+  // Graceful shutdown
+  // @see https://docs.nestjs.com/fundamentals/lifecycle-events
+  app.enableShutdownHooks();
+
+  const port = configService.get<number>("PORT") || 3001;
+
+  try {
+    await app.listen(port);
+    logger.log(`🚀 Application is running on: http://localhost:${port}`);
+  } catch (error) {
+    logger.error(`Failed to start application: ${error}`);
+    process.exit(1);
+  }
+}
+
+void bootstrap();
