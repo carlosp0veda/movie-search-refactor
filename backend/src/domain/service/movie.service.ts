@@ -109,7 +109,7 @@ export class MovieService implements MovieFacade {
       return {
         favorites: [],
         count: 0,
-        totalResults: "0",
+        totalResults: 0,
         currentPage: page,
         totalPages: 0,
       };
@@ -123,7 +123,7 @@ export class MovieService implements MovieFacade {
     return {
       favorites: paginatedFavorites,
       count: paginatedFavorites.length,
-      totalResults: String(totalCount),
+      totalResults: totalCount,
       currentPage: page,
       totalPages,
     };

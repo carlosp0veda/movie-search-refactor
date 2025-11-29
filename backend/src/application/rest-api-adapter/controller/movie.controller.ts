@@ -42,7 +42,7 @@ export class MovieController {
     @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number,
   ) {
     if (!query || query.trim().length === 0) {
-      return SearchResultsDto.create([], "0");
+      return SearchResultsDto.create([], 0);
     }
 
     const validPage = Math.max(1, page);

@@ -74,11 +74,11 @@ export class MovieResponseDto {
 export class SearchResultsDto {
   movies: MovieResponseDto[];
   count: number;
-  totalResults: string;
+  totalResults: number;
 
   static create(
     movies: Movie[],
-    totalResults: string,
+    totalResults: number,
   ): { data: SearchResultsDto } {
     const dto = new SearchResultsDto();
     dto.movies = movies.map((movie) => MovieResponseDto.fromDomain(movie));
@@ -94,14 +94,14 @@ export class SearchResultsDto {
 export class FavoritesListDto {
   favorites: MovieResponseDto[];
   count: number;
-  totalResults: string;
+  totalResults: number;
   currentPage: number;
   totalPages: number;
 
   static create(
     favorites: Movie[],
     count: number,
-    totalResults: string,
+    totalResults: number,
     currentPage: number,
     totalPages: number,
   ): { data: FavoritesListDto } {

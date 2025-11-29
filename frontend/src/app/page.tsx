@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { useSearchMovies, useAddToFavorites, useRemoveFromFavorites } from '@/hooks/useMovies';
+import { useSearchMovies, useAddToFavorites, useRemoveFromFavorites } from '@/hooks';
 import { Movie } from '@/types/movie';
-import SearchBar from '@/components/searchBar';
+import SearchBar from '@/components/SearchBar';
 import MovieCard from '@/components/MovieCard';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/Pagination';
 
 const RESULTS_PER_PAGE = 10;
 
@@ -21,13 +21,13 @@ export default function SearchPage() {
     isError,
   } = useSearchMovies(searchQuery, currentPage, searchEnabled);
   
-  const addToFavorites = useAddToFavorites();
-  const removeFromFavorites = useRemoveFromFavorites();
+  const { mutateAsync: addToFavorites, isPending: isAddToFavoritesPending } = useAddToFavorites();
+  const { mutateAsync: removeFromFavorites, isPending: isRemoveFromFavoritesPending } = useRemoveFromFavorites();
 
   // Memoize total pages calculation
   const totalPages = useMemo(() => {
     if (!searchResults?.data.totalResults) return 0;
-    return Math.ceil(parseInt(searchResults.data.totalResults) / RESULTS_PER_PAGE);
+    return Math.ceil(searchResults.data.totalResults / RESULTS_PER_PAGE);
   }, [searchResults?.data.totalResults]);
 
   const handleSearch = useCallback((query: string) => {
@@ -38,24 +38,24 @@ export default function SearchPage() {
     setSearchEnabled(true);
     setCurrentPage(1);
   }, []);
-
+  
   const handleToggleFavorite = useCallback(async (movie: Movie) => {
     // Prevent multiple rapid clicks
-    if (addToFavorites.isPending || removeFromFavorites.isPending) {
+    if (isAddToFavoritesPending || isRemoveFromFavoritesPending) {
       return;
     }
 
     try {
       if (movie.isFavorite) {
-        await removeFromFavorites.mutateAsync(movie.imdbID);
+        await removeFromFavorites(movie.imdbID);
       } else {
-        await addToFavorites.mutateAsync(movie);
+        await addToFavorites(movie);
       }
     } catch (error) {
       // Error is already logged in the hook
       console.error('Failed to toggle favorite:', error);
     }
-  }, [addToFavorites, removeFromFavorites]);
+  }, [addToFavorites, removeFromFavorites, isAddToFavoritesPending, isRemoveFromFavoritesPending]);
 
   const handlePageChange = useCallback((page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -138,6 +138,7 @@ export default function SearchPage() {
                   movie={movie}
                   isFavorite={movie.isFavorite ?? false}
                   onToggleFavorite={handleToggleFavorite}
+                  isLoading={isAddToFavoritesPending || isRemoveFromFavoritesPending}
                 />
               ))}
             </div>

@@ -2,9 +2,9 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import MovieCard from '@/components/MovieCard';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/Pagination';
 import { Button } from '@/components/ui/button';
-import { useFavorites, useRemoveFromFavorites } from '@/hooks/useMovies';
+import { useFavorites, useRemoveFromFavorites } from '@/hooks';
 import { Movie } from '@/types/movie';
 import Link from 'next/link';
 
@@ -18,7 +18,7 @@ const Favorites = () => {
     error,
   } = useFavorites(currentPage);
   
-  const removeFromFavorites = useRemoveFromFavorites();
+  const { mutateAsync: removeFromFavorites, isPending: isRemoveFromFavoritesPending } = useRemoveFromFavorites();
 
   // Calculate total results safely
   const totalResults = useMemo(() => {
@@ -38,14 +38,14 @@ const Favorites = () => {
   }, [favorites?.data.favorites?.length, currentPage, isLoading]);
 
   const handleRemoveFavorite = useCallback(async (movie: Movie) => {
-    if (removeFromFavorites.isPending) return;
+    if (isRemoveFromFavoritesPending) return;
 
     try {
-      await removeFromFavorites.mutateAsync(movie.imdbID);
+      await removeFromFavorites(movie.imdbID);
     } catch (error) {
       console.error('Failed to remove from favorites:', error);
     }
-  }, [removeFromFavorites]);
+  }, [removeFromFavorites, isRemoveFromFavoritesPending]);
 
   const handlePageChange = useCallback((page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -117,6 +117,7 @@ const Favorites = () => {
                   movie={movie}
                   isFavorite={true}
                   onToggleFavorite={handleRemoveFavorite}
+                  isLoading={isRemoveFromFavoritesPending}
                 />
               ))}
             </div>

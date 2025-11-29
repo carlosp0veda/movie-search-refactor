@@ -63,7 +63,7 @@ export class OmdbAdapter implements MovieSearchPort {
         this.logger.debug(
           `No results for query "${title}": ${response.data.Error}`,
         );
-        return { movies: [], totalResults: "0" };
+        return { movies: [], totalResults: 0 };
       }
 
       const movies = (response.data.Search || []).map((movie) => ({
@@ -75,7 +75,7 @@ export class OmdbAdapter implements MovieSearchPort {
 
       return {
         movies,
-        totalResults: response.data.totalResults || "0",
+        totalResults: parseInt(response.data.totalResults || "0", 10),
       };
     } catch (error) {
       return this.handleError(error);

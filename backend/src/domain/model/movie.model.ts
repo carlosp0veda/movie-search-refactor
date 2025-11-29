@@ -15,7 +15,7 @@ export interface Movie {
  */
 export interface MovieSearchResult {
   readonly movies: Movie[];
-  readonly totalResults: string;
+  readonly totalResults: number;
 }
 
 /**
@@ -24,7 +24,7 @@ export interface MovieSearchResult {
 export interface FavoritesList {
   readonly favorites: Movie[];
   readonly count: number;
-  readonly totalResults: string;
+  readonly totalResults: number;
   readonly currentPage: number;
   readonly totalPages: number;
 }

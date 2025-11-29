@@ -1,25 +1,30 @@
+import { useState } from "react";
 import { Movie } from "@/types/movie";
+import Image from "next/image";
 
 interface MovieCardProps {
   movie: Movie;
   isFavorite: boolean;
   onToggleFavorite: (movie: Movie) => void;
+  isLoading: boolean;
 }
 
-// BUG: Not using React.memo for performance
-const MovieCard = ({ movie, isFavorite, onToggleFavorite }: MovieCardProps) => {
+const MovieCard = ({ movie, isFavorite, onToggleFavorite, isLoading }: MovieCardProps) => {
+  const [imageError, setImageError] = useState(false);
+
+  const hasValidPoster = movie.poster && movie.poster !== "N/A" && !imageError;
+
   return (
     <div className="group relative bg-white rounded-lg overflow-hidden hover:mouse-pointer shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-      <div className="relative aspect-[2/3] overflow-hidden">
-        {/* BUG: No error handling for broken images */}
-        {/* BUG: If poster URL is invalid or 404, image fails to load but no fallback */}
-        {/* BUG: Poster might be empty string "", which passes the check but shows broken image */}
-        {movie.poster && movie.poster !== "N/A" ? (
-          <img
+      <div className="relative aspect-2/3 overflow-hidden">
+        {hasValidPoster ? (
+          <Image
             src={movie.poster}
             alt={movie.title}
+            width={150}
+            height={225}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            // BUG: No onError handler for failed image loads
+            onError={() => setImageError(true)}
           />
         ) : (
           <div className="w-full h-full bg-gray-100 flex items-center justify-center">
@@ -34,9 +39,7 @@ const MovieCard = ({ movie, isFavorite, onToggleFavorite }: MovieCardProps) => {
         
         <button
           onClick={() => onToggleFavorite(movie)}
-          // BUG: No loading state, can be clicked multiple times
-          // BUG: No disabled state during mutation - rapid clicks cause race conditions
-          // BUG: If mutation is in progress, button should be disabled
+          disabled={isLoading}
           className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-200 ${
             isFavorite
               ? "bg-red-500 text-white hover:bg-red-600"
